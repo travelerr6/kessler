@@ -31,7 +31,7 @@ struct square:shape{
     }
 };
 
-int main(){\
+int main(){
     shared_ptr<shape>p1=make_shared<circle>(1);
     cout<<p1.use_count()<<endl;
     {

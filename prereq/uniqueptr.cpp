@@ -1,5 +1,6 @@
 #include<iostream>
 #include<vector>
+#include<memory>
 using namespace std;
 
 struct shape{
@@ -42,10 +43,3 @@ int main(){
 
     return 0;
 }
-//output : the order of deletion is this because the stack works on the lifo
-// circle class destroyed radius = 1
-// shape class destroyed
-// circle class destroyed side = 4
-// shape class destroyed
-// circle class destroyed radius = 3
-// shape class destroyed
