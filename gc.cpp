@@ -12,6 +12,19 @@ struct GC{
     std::queue<Object*>q;
     std::vector<Object*>all;
     std::vector<Object*>survivors;
+    std::vector<std::function<Object*()>>roots;
+
+    void addRoot(std::function<Object*()> f){
+        roots.push_back(f);
+    }
+
+    void collect(){
+        for(auto& f:roots){
+            mark(f());
+            drain();
+        }
+        sweep();
+    }
 
     void track(Object* o){
         all.push_back(o);
@@ -25,6 +38,7 @@ struct GC{
             }
         }
     }
+
     void drain(){
         while(!q.empty()){
             Object* o=q.front();
@@ -32,6 +46,7 @@ struct GC{
             o->trace(*this);
         }
     }
+
     void sweep(){
         for(auto& it:all){
             if(!it->visited){
@@ -45,6 +60,13 @@ struct GC{
         all=survivors;
         survivors.clear();
     }
+
+    ~GC(){
+        for(auto& it:all){
+            delete it;
+        }
+    }
+
 };
 
 struct TreeNode:Object{
@@ -61,7 +83,7 @@ struct TreeNode:Object{
         gc.mark(right);
     }
     ~TreeNode(){
-        std::cout<<"freezing: "<<val<<std::endl;
+        std::cout<<"freeing: "<<val<<std::endl;
     }
 };
 
@@ -74,22 +96,29 @@ int main(){
     root->right=new TreeNode(3);
     gc.track(root->right);
 
-    TreeNode* ran=new TreeNode(99);
-    gc.track(ran);
+    TreeNode* other=new TreeNode(10);
+    gc.track(other);
+    other->left=new TreeNode(11);
+    gc.track(other->left);
 
-    std::cout<<"all: "<<gc.all.size()<<std::endl;
-    
-    gc.mark(root);
-    gc.drain();
 
-    std::cout<<"root: "<<root->visited<<std::endl;
-    std::cout<<"root left: "<<root->left->visited<<std::endl;
-    std::cout<<"root right : "<<root->right->visited<<std::endl;
+    gc.addRoot([&] {
+        return root;
+    });
+    gc.addRoot([&]{
+        return other;
+    });
+    int i=0;
 
-    std::cout<<"ran: "<<ran->visited<<std::endl;
+    std::cout<<"run: "<<++i<<std::endl;
+    gc.collect();
+    std::cout<<"all: "<<gc.all.size()<<std::endl<<std::endl;
 
-    gc.sweep();
-    std::cout<<"all: "<<gc.all.size()<<std::endl;
+    other=nullptr;
+
+    std::cout<<"run: "<<++i<<std::endl;
+    gc.collect();
+    std::cout<<"all: "<<gc.all.size()<<std::endl<<std::endl;
 
     return 0;
 }
