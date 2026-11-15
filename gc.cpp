@@ -89,6 +89,7 @@ int main(){
     std::cout<<"ran: "<<ran->visited<<std::endl;
 
     gc.sweep();
+    std::cout<<"all: "<<gc.all.size()<<std::endl;
 
     return 0;
 }
