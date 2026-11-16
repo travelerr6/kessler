@@ -14,9 +14,16 @@ struct GC{
     std::vector<Object*>all;
     std::vector<Object*>survivors;
     std::vector<std::function<Object*()>>roots;
+    size_t minimum_threshold=10000;
+    size_t threshold=50000;
+    size_t collection_count=0;
 
     template<class T, class ... Args>
     T* make(Args&&... args){
+        if(all.size()>threshold){
+            collect();
+        }
+
         T* obj=new T(std::forward<Args>(args)...);
         track(obj);
         return obj;
@@ -32,6 +39,12 @@ struct GC{
             drain();
         }
         sweep();
+        threshold=std::max(minimum_threshold,2*all.size());
+        collection_count++;
+    }
+
+    void collections(){
+        std::cout<<"collection count = "<<collection_count<<std::endl;
     }
 
     void track(Object* o){
@@ -91,35 +104,42 @@ struct TreeNode:Object{
         gc.mark(right);
     }
     ~TreeNode(){
-        std::cout<<"freeing: "<<val<<std::endl;
+        // std::cout<<"freeing: "<<val<<std::endl;
     }
 };
 
 int main(){
     GC gc;
-    TreeNode* root=gc.make<TreeNode>(1);
-    root->left=gc.make<TreeNode>(2);
-    root->right=gc.make<TreeNode>(3);
 
-    TreeNode* other=gc.make<TreeNode>(10);
-    other->left=gc.make<TreeNode>(11);
-
+    TreeNode* root=nullptr;
+    TreeNode* other=nullptr;
     gc.addRoot([&] {
         return root;
     });
     gc.addRoot([&]{
         return other;
     });
-    int i=0;
 
-    std::cout<<"run: "<<++i<<std::endl;
+    root=gc.make<TreeNode>(1);
+    root->left=gc.make<TreeNode>(2);
+    root->right=gc.make<TreeNode>(3);
+
+    other=gc.make<TreeNode>(10);
+    other->left=gc.make<TreeNode>(11);
+
+
+    for(int i=0;i<1000000;i++){
+        gc.make<TreeNode>(i);
+    }
+
     gc.collect();
+    gc.collections();
     std::cout<<"all: "<<gc.all.size()<<std::endl<<std::endl;
 
     other=nullptr;
 
-    std::cout<<"run: "<<++i<<std::endl;
     gc.collect();
+    gc.collections();
     std::cout<<"all: "<<gc.all.size()<<std::endl<<std::endl;
 
     return 0;
