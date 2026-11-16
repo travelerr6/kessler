@@ -8,11 +8,19 @@ struct Object{
     virtual ~Object()=default;
 };
 
+
 struct GC{
     std::queue<Object*>q;
     std::vector<Object*>all;
     std::vector<Object*>survivors;
     std::vector<std::function<Object*()>>roots;
+
+    template<class T, class ... Args>
+    T* make(Args&&... args){
+        T* obj=new T(std::forward<Args>(args)...);
+        track(obj);
+        return obj;
+    }
 
     void addRoot(std::function<Object*()> f){
         roots.push_back(f);
@@ -89,18 +97,12 @@ struct TreeNode:Object{
 
 int main(){
     GC gc;
-    TreeNode* root=new TreeNode(1);
-    gc.track(root);
-    root->left=new TreeNode(2);
-    gc.track(root->left);
-    root->right=new TreeNode(3);
-    gc.track(root->right);
+    TreeNode* root=gc.make<TreeNode>(1);
+    root->left=gc.make<TreeNode>(2);
+    root->right=gc.make<TreeNode>(3);
 
-    TreeNode* other=new TreeNode(10);
-    gc.track(other);
-    other->left=new TreeNode(11);
-    gc.track(other->left);
-
+    TreeNode* other=gc.make<TreeNode>(10);
+    other->left=gc.make<TreeNode>(11);
 
     gc.addRoot([&] {
         return root;
