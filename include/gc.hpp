@@ -25,10 +25,11 @@ struct GC{
     size_t minimum_threshold=10000;
     size_t threshold=50000;
     size_t collection_count=0;
+    bool stress=false;
 
     template<class T, class ... Args>
     T* make(Args&&... args){
-        if(all.size()>threshold){
+        if(stress || all.size()>threshold){
             collect();
         }
 
