@@ -16,6 +16,11 @@ struct Object{
     virtual ~Object()=default;
 };
 
+struct RootBase{
+    virtual Object* get() const=0;
+    virtual ~RootBase()=default;
+};
+
 
 struct GC{
     std::queue<Object*>q;
@@ -26,6 +31,7 @@ struct GC{
     size_t threshold=50000;
     size_t collection_count=0;
     bool stress=false;
+    std::vector<RootBase*>handles;
 
     template<class T, class ... Args>
     T* make(Args&&... args){
@@ -90,6 +96,8 @@ struct GC{
         all=survivors;
         survivors.clear();
     }
+
+    void 
 
     ~GC(){
         for(auto& it:all){
