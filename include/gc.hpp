@@ -51,8 +51,11 @@ struct GC{
     void collect(){
         for(auto& f:roots){
             mark(f());
-            drain();
         }
+        for(auto& h:handles){
+            mark(h->get());
+        }
+        drain();
         sweep();
         threshold=std::max(minimum_threshold,2*all.size());
         collection_count++;
@@ -97,7 +100,16 @@ struct GC{
         survivors.clear();
     }
 
-    void 
+    void addHandle(RootBase* h){
+        handles.push_back(h);
+    }
+
+    void removeHandle(RootBase* h){
+        auto pos=std::find(handles.begin(),handles.end(),h);
+        if(pos!=handles.end()){
+            handles.erase(pos);
+        }
+    }
 
     ~GC(){
         for(auto& it:all){
