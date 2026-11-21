@@ -4,7 +4,6 @@
 #include<vector>
 #include<memory>
 #include<queue>
-#include<functional>
 #include<utility>
 #include<algorithm>
 
@@ -26,7 +25,6 @@ struct GC{
     std::queue<Object*>q;
     std::vector<Object*>all;
     std::vector<Object*>survivors;
-    std::vector<std::function<Object*()>>roots;
     size_t minimum_threshold=10000;
     size_t threshold=50000;
     size_t collection_count=0;
@@ -44,14 +42,7 @@ struct GC{
         return obj;
     }
 
-    void addRoot(std::function<Object*()> f){
-        roots.push_back(f);
-    }
-
     void collect(){
-        for(auto& f:roots){
-            mark(f());
-        }
         for(auto& h:handles){
             mark(h->get());
         }

@@ -15,6 +15,6 @@ struct TreeNode:Object{
         gc.mark(right);
     }
     ~TreeNode(){
-        // std::cout<<"freeing: "<<val<<std::endl;
+        std::cout<<"freeing: "<<val<<std::endl;
     }
 };

@@ -4,13 +4,19 @@
 
 int main(){
     GC gc;
-    {
-    Handle<TreeNode> t(gc);
-    t = gc.make<TreeNode>(42);
-    }
-    std::cout << "before: " << gc.all.size() << "\n";
-    gc.collect();
-    std::cout << "after: " << gc.all.size() << "\n";
-    //std::cout << t->val << "\n";      // expect 42
+    Handle<TreeNode> root(gc);
+Handle<TreeNode> other(gc);
+root = gc.make<TreeNode>(1);
+root->left  = gc.make<TreeNode>(2);
+root->right = gc.make<TreeNode>(3);
+other = gc.make<TreeNode>(10);
+other->left = gc.make<TreeNode>(11);
+
+gc.collect();
+std::cout << "after 1st: " << gc.all.size() << "\n";   // expect 5
+other = nullptr;
+gc.collect();
+std::cout << "after 2nd: " << gc.all.size() << "\n";   // expect 3
+
     return 0;
 }
